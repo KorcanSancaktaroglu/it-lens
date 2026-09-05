@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import subprocess
 import platform
 import sqlite3
@@ -35,6 +35,16 @@ def test():
 
 @app.get("/ping/{ip_adresi}")
 def ping_at(ip_adresi: str):
+    # Gecersiz IP formatlarini (orn. bos deger, komut satiri parametresi
+    # gibi gorunen degerler) ping komutuna gondermeden once reddet.
+    try:
+        ipaddress.ip_address(ip_adresi)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Gecersiz IP adresi formati: '{ip_adresi}'"
+        )
+
     param = "-n" if platform.system().lower() == "windows" else "-c"
     komut = ["ping", param, "1", ip_adresi]
 
@@ -92,7 +102,18 @@ def tek_ip_tara(ip_str: str):
 
 @app.get("/network-scan/{subnet_on_eki}")
 def ag_tara(subnet_on_eki: str):
-    ag = ipaddress.ip_network(f"{subnet_on_eki}.0/24", strict=False)
+    # subnet_on_eki "192.168.1" gibi ilk 3 oktet olmali; gecersiz
+    # bir deger gelirse ip_network cökmeden once yakalayip anlamli
+    # bir hata donuyoruz (orn. 500 yerine 400).
+    try:
+        ag = ipaddress.ip_network(f"{subnet_on_eki}.0/24", strict=False)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Gecersiz subnet formati: '{subnet_on_eki}' "
+                   f"(orn: 192.168.1)"
+        )
+
     ip_listesi = [str(ip) for ip in ag.hosts()]
 
     acik_cihazlar = []
