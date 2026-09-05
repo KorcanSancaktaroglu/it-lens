@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 
-const BACKEND_URL = "http://192.168.1.106:8000";
+import { BACKEND_URL } from "@/constants/api";
 
 type Tarama = {
   id: number;

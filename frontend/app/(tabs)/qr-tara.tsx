@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 
-const BACKEND_URL = "http://192.168.1.106:8000";
+import { BACKEND_URL } from "@/constants/api";
 
 // Ana ekrandaki (index.tsx) ile ayni radar animasyonu
 function RadarAnimasyonu() {

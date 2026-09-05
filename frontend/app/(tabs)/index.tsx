@@ -11,7 +11,7 @@ import {
   Easing,
 } from "react-native";
 
-const BACKEND_URL = "http://192.168.1.106:8000";
+import { BACKEND_URL } from "@/constants/api";
 
 // Tarama sirasinda gosterilen radar tarzi animasyon bileseni
 function RadarAnimasyonu() {
