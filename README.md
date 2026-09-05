@@ -90,6 +90,29 @@ To test on a physical device, use the **Expo Go** app and make sure your phone i
  
 ---
  
+## 🧪 Testler / Tests
+
+Backend, fonksiyonel, sınır değer (boundary) ve güvenlik testlerini kapsayan bir `pytest` test paketi ile doğrulanmıştır. Testler; geçerli/geçersiz IP ve subnet girişlerini, komut enjeksiyonu (command injection) denemelerini, SQL injection direncini, performans sınırlarını ve `/gecmis` endpoint'inin 50 kayıt limitini kapsar.
+
+The backend is validated with a `pytest` suite covering functional, boundary, and security cases — including valid/invalid IP and subnet inputs, command-injection attempts, SQL-injection resistance, performance limits, and the 50-record cap on `/gecmis`.
+
+```bash
+cd backend
+venv\Scripts\activate      # Windows
+# source venv/bin/activate  # macOS/Linux
+
+pip install pytest httpx
+pytest test_qa.py -v
+```
+
+**Sonuç / Result:** 25 test senaryosundan **24'ü başarılı** (24/25 passed). Tek başarısız olan senaryo (`/ping/..`), uygulamanın kendisiyle değil, HTTP istemcilerinin `..` gibi path segmentlerini RFC 3986 standardına göre otomatik olarak temizlemesiyle ilgilidir — zararsız bir davranıştır, güvenlik açığı oluşturmaz.
+
+Of the 25 test cases, **24 passed**. The single failure (`/ping/..`) stems from HTTP clients normalizing `..` path segments per RFC 3986 before the request reaches the app — a harmless behavior, not a security issue.
+
+**Öne çıkan güvenlik testi / Key security test:** Komut enjeksiyonu denemeleri (`; touch /tmp/pwned`, `$(whoami)`, `&& whoami` vb.) hepsi başarıyla reddedildi; `subprocess.run()`'ın liste argümanlarıyla (`shell=False`) çağrılması ve IP doğrulama katmanı birlikte bu riski ortadan kaldırıyor. — Command-injection attempts were all successfully rejected, thanks to `subprocess.run()` being called with list arguments (`shell=False`) combined with the IP-validation layer.
+
+---
+
 ## 🗺️ Yol Haritası / Roadmap
  
 - [ ] `scapy`/`nmap` entegrasyonu ile daha gelişmiş port taraması / Advanced port scanning via `scapy`/`nmap`
