@@ -12,6 +12,7 @@ import {
 } from "react-native";
 
 import { BACKEND_URL } from "@/constants/api";
+import { useDeviceMonitor } from "@/hooks/use-device-monitor";
 
 // Tarama sirasinda gosterilen radar tarzi animasyon bileseni
 function RadarAnimasyonu() {
@@ -84,6 +85,9 @@ export default function HomeScreen() {
   const [agTaraniyor, setAgTaraniyor] = useState(false);
   const [agSonucu, setAgSonucu] = useState<any>(null);
 
+  const { izlenenler, izlemeAktif, izlemeyiBaslat, izlemeyiDurdur, izlemeAraligiSaniye } =
+    useDeviceMonitor();
+
   const taramaYap = async () => {
     if (!ip) {
       setHata("Lutfen bir IP adresi girin");
@@ -122,11 +126,16 @@ export default function HomeScreen() {
     setAgTaraniyor(true);
     setAgSonucu(null);
     setSonuc(null);
+    izlemeyiDurdur(); // onceki taramadan kalan izlemeyi durdur
 
     try {
       const response = await fetch(`${BACKEND_URL}/network-scan/${subnet}`);
       const data = await response.json();
       setAgSonucu(data);
+
+      if (data.cihazlar && data.cihazlar.length > 0) {
+        izlemeyiBaslat(data.cihazlar);
+      }
     } catch (err) {
       setHata("Ag taramasi basarisiz. Backend baglantisini kontrol et.");
     } finally {
@@ -196,17 +205,43 @@ export default function HomeScreen() {
           <Text style={styles.agBaslik}>
             {agSonucu.subnet} — {agSonucu.bulunan_cihaz_sayisi} cihaz bulundu
           </Text>
+
+          {izlemeAktif && (
+            <View style={styles.izlemeSatiri}>
+              <View style={styles.izlemeNoktasi} />
+              <Text style={styles.izlemeMetni}>
+                Canli izleme aktif ({izlemeAraligiSaniye}sn'de bir kontrol)
+              </Text>
+            </View>
+          )}
+
           <FlatList
             data={agSonucu.cihazlar}
             keyExtractor={(item) => item.ip}
             scrollEnabled={false}
-            renderItem={({ item }) => (
-              <View style={styles.cihazSatiri}>
-                <Text style={styles.cihazIp}>{item.ip}</Text>
-                <Text style={styles.cihazDurum}>🟢 Acik</Text>
-              </View>
-            )}
+            renderItem={({ item }) => {
+              const canliDurum =
+                izlenenler.find((c) => c.ip === item.ip)?.durum ?? "acik";
+              const durumGosterimi =
+                canliDurum === "acik"
+                  ? "🟢 Acik"
+                  : canliDurum === "kapali"
+                    ? "🔴 Kapali"
+                    : "⚠️ Zaman Asimi";
+              return (
+                <View style={styles.cihazSatiri}>
+                  <Text style={styles.cihazIp}>{item.ip}</Text>
+                  <Text style={styles.cihazDurum}>{durumGosterimi}</Text>
+                </View>
+              );
+            }}
           />
+
+          {izlemeAktif && (
+            <Text style={styles.izlemeyiDurdurButonu} onPress={izlemeyiDurdur}>
+              Izlemeyi durdur
+            </Text>
+          )}
         </View>
       )}
     </ScrollView>
@@ -283,4 +318,24 @@ const styles = StyleSheet.create({
   },
   cihazIp: { fontSize: 15, fontFamily: "monospace" },
   cihazDurum: { fontSize: 15 },
+  izlemeSatiri: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  izlemeNoktasi: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#2E7D32",
+    marginRight: 8,
+  },
+  izlemeMetni: { fontSize: 12, color: "#2E7D32", fontStyle: "italic" },
+  izlemeyiDurdurButonu: {
+    fontSize: 13,
+    color: "#c0392b",
+    textAlign: "center",
+    marginTop: 14,
+    textDecorationLine: "underline",
+  },
 });

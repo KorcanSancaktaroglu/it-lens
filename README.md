@@ -53,22 +53,24 @@ During the early days of the internship, it was observed that the institution's 
 ## 🚀 Kurulum / Setup
  
 ### Backend
- 
+
 ```bash
 # Sanal ortam oluşturma / Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
- 
+
 # Bağımlılıkların kurulumu / Install dependencies
-python -m pip install fastapi uvicorn
- 
+python -m pip install -r requirements.txt
+
 # Sunucuyu başlatma / Start the server
-uvicorn main:app --reload
+uvicorn main:app --reload --host 0.0.0.0
 ```
- 
-Sunucu varsayılan olarak `http://0.0.0.0:8000` adresinde ayağa kalkar.
-The server runs at `http://0.0.0.0:8000` by default.
- 
+
+> **Önemli / Important:** `--host 0.0.0.0` parametresi mutlaka eklenmelidir — aksi halde sunucu varsayılan olarak sadece `127.0.0.1` (yani sadece bilgisayarın kendisi) üzerinden erişilebilir olur ve mobil cihazdan (Expo Go) bağlanılamaz. — The `--host 0.0.0.0` flag is required — without it, the server defaults to `127.0.0.1` only, meaning it won't be reachable from a mobile device (Expo Go) on the same network.
+
+Bu şekilde sunucu `http://0.0.0.0:8000` üzerinden, yani ağdaki tüm arayüzlerden erişilebilir hale gelir (bilgisayarının LAN IP'si üzerinden telefonundan bağlanabilirsin).
+This makes the server listen on all network interfaces at `http://0.0.0.0:8000`, so it's reachable from your phone via your computer's LAN IP.
+
 ### Mobil Uygulama / Mobile App
  
 ```bash
